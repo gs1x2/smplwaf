@@ -1,0 +1,950 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Недоfirewall</title>
+    <style>
+        body { font-family: monospace; background: #111; color: #eee; margin: 0; }
+        .navbar { background: #222; padding: 10px 20px; border-bottom: 1px solid #444; }
+        .navbar h1 { margin: 0; font-size: 1.2rem; }
+
+        .container { padding: 20px; display: flex; gap: 20px; }
+
+        .panel { background: #1a1a1a; border: 1px solid #333; padding: 10px; border-radius: 4px; }
+        .sessions-list { flex: 1; }
+        .details-view { flex: 2; display: none; }
+        .rules-view { flex: 1; display: none; flex-direction: row; gap: 20px; }
+
+        .rules-list { width: 300px; border-right: 1px solid #333; overflow-y: auto; overflow-x: hidden; }
+        .rules-editor { flex: 1; display: flex; flex-direction: column; }
+        textarea { width: 100%; flex: 1; background: #222; color: #eee; border: 1px solid #444; padding: 10px; font-family: monospace; resize: none; }
+
+        table { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
+        th, td { text-align: left; padding: 8px; border-bottom: 1px solid #333; }
+        th { color: #888; }
+        tr:hover { background: #222; cursor: pointer; }
+        tr.active { background: #333; }
+
+        .tag { padding: 2px 5px; border-radius: 3px; font-size: 0.8rem; margin-right: 5px; }
+        .tag-red { background: #500; color: #faa; }
+        .tag-green { background: #050; color: #afa; }
+
+        .row-blocked { border-left: 4px solid #f00 !important; background: #311 !important; }
+        .row-marked { border-left: 4px solid #fa0 !important; background: #331 !important; }
+
+        pre { background: #000; padding: 10px; border: 1px solid #333; overflow-x: auto; }
+
+        .wiki-content { max-width: 800px; margin: 0 auto; line-height: 1.6; }
+        .wiki-section { margin-bottom: 30px; background: #1a1a1a; padding: 20px; border-radius: 4px; border: 1px solid #333; }
+        .lang-btn { background: #333; border: 1px solid #555; color: #eee; padding: 5px 10px; cursor: pointer; }
+        .lang-btn.active { background: #05a; border-color: #07f; }
+
+        .stream-block { border-left: 2px solid #444; padding-left: 10px; margin-bottom: 20px; }
+        .msg-req { color: #8cf; display: flex; align-items: center; flex-wrap: wrap; gap: 10px; }
+        .msg-res { color: #fc8; }
+        .blocked { color: #f55; font-weight: bold; }
+
+        .btn-action { background: #333; border: 1px solid #555; color: #ccc; padding: 2px 6px; font-size: 0.75rem; cursor: pointer; border-radius: 3px; margin-left: 5px; }
+        .btn-action:hover { background: #444; color: #fff; }
+
+        /* Modal Styles */
+        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); display: none; justify-content: center; align-items: center; z-index: 1000; }
+        .modal-box { background: #1a1a1a; padding: 20px; border: 1px solid #444; width: 400px; border-radius: 4px; }
+        .modal-title { margin-top: 0; }
+        .modal-option { display: flex; align-items: center; margin-bottom: 10px; }
+        .modal-option input { margin-right: 10px; }
+        .modal-footer { margin-top: 20px; display: flex; justify-content: flex-end; gap: 10px; }
+        .modal-btn { padding: 5px 15px; border: none; cursor: pointer; color: white; }
+        .btn-cancel { background: #555; }
+        .btn-confirm { background: #05a; }
+
+        /* Tree View Styles */
+        .tree-root ul { list-style: none; padding-left: 20px; }
+        .tree-root li { margin: 2px 0; }
+        .folder { font-weight: bold; cursor: pointer; color: #aaa; }
+        .folder:hover { color: #eee; }
+        .file { cursor: pointer; color: #eee; display: flex; justify-content: space-between; align-items: center; padding-right: 5px; }
+        .file.active { color: #0cf; background: #222; }
+        .file:hover { background: #222; }
+        .file-controls { display: none; gap: 5px; }
+        .file:hover .file-controls { display: flex; }
+        .hidden { display: none; }
+        .folder::before { content: '📁 '; }
+        .folder.open::before { content: '📂 '; }
+        .file::before { content: '📄 '; }
+    </style>
+</head>
+<body>
+
+<div class="navbar">
+    <div style="display: flex; justify-content: space-between; align-items: center;">
+        <div style="display: flex; gap: 20px; align-items: center;">
+            <h1>НедоFirewall v0.4beta</h1>
+            <a href="#" onclick="switchView('dashboard')" style="color: #eee; text-decoration: none;">Dashboard</a>
+            <a href="#" onclick="switchView('rules')" style="color: #eee; text-decoration: none;">Rules</a>
+            <a href="#" onclick="switchView('wiki')" style="color: #eee; text-decoration: none;">Wiki</a>
+        </div>
+        <div>
+            <!-- Global actions -->
+            <button onclick="alert('Select a session first to block IP')" style="padding: 5px 10px; background: #900; border: none; color: #fff; cursor: pointer;" id="blockIpBtn">Block IP</button>
+        </div>
+    </div>
+</div>
+
+<div class="container" id="view-dashboard">
+    <div class="panel sessions-list">
+        <h3>User Sessions</h3>
+        <table id="sessionsTable">
+            <thead>
+                <tr>
+                    <th>IP</th>
+                    <th>Started</th>
+                    <th>Streams</th>
+                    <th>Status</th>
+                    <th>Tags</th>
+                </tr>
+            </thead>
+            <tbody>
+                <!-- Populated by JS -->
+            </tbody>
+        </table>
+    </div>
+
+    <div class="panel details-view" id="detailsPanel">
+        <h3 id="detailTitle">Details</h3>
+        <div id="detailContent"></div>
+    </div>
+</div>
+
+<div class="container" id="view-rules" style="display: none;">
+    <div class="panel rules-view" style="width: 100%; height: 80vh; display: flex;">
+        <div class="rules-list">
+            <h3>Files</h3>
+            <div id="rulesTree" class="tree-root" style="overflow-y: auto; flex: 1; max-height: calc(100% - 40px);"></div>
+
+            <div style="padding: 10px; border-top: 1px solid #333;">
+                <input type="text" id="newRuleName" placeholder="dynamic/new.rule" style="width: 100%; margin-bottom: 5px; background: #333; color: #eee; border: 1px solid #555;">
+                <button onclick="createNewRule()" style="width: 100%;">Create New</button>
+            </div>
+        </div>
+        <div class="rules-editor">
+            <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
+                <h3 id="editorTitle">Select a file</h3>
+                <div style="display: flex; gap: 5px;">
+                    <button onclick="toggleHelp()" style="background: #444; border: none; color: #fff; padding: 5px 10px; cursor: pointer;">Help</button>
+                    <button onclick="renameCurrentRule()" style="background: #860; border: none; color: #fff; padding: 5px 10px; cursor: pointer; display: none;" id="btnRename">Rename</button>
+                    <button onclick="reloadRules()" style="background: #a50; border: none; color: #fff; padding: 5px 10px; cursor: pointer;">Apply Rules</button>
+                    <button onclick="saveRule()" style="background: #05a; border: none; color: #fff; padding: 5px 10px; cursor: pointer;">Save</button>
+                </div>
+            </div>
+            <div style="flex: 1; display: flex; gap: 10px;">
+                <textarea id="ruleContent" spellcheck="false"></textarea>
+                <div id="helpPanel" style="width: 250px; background: #222; border: 1px solid #444; padding: 10px; overflow-y: auto; display: none; font-size: 0.8rem;">
+                    <h4>Syntax Reference</h4>
+                    <p><b>Objects:</b></p>
+                    <ul>
+                        <li><code>request</code> / <code>httprequest</code>
+                            <ul>
+                                <li><code>.path</code> (str)</li>
+                                <li><code>.method</code> (str)</li>
+                                <li><code>.client_ip</code> (str)</li>
+                                <li><code>.destination_port</code> (int)</li>
+                                <li><code>.headers</code> (dict)</li>
+                                <li><code>.data</code> (str body)</li>
+                            </ul>
+                        </li>
+                        <li><code>action</code>
+                            <ul>
+                                <li><code>.drop()</code></li>
+                                <li><code>.accept()</code></li>
+                                <li><code>.mark('tag')</code></li>
+                            </ul>
+                        </li>
+                        <li><code>re</code> (Python regex module)</li>
+                    </ul>
+                    <p><b>Logic & Types:</b></p>
+                    <ul>
+                        <li>String methods: <code>.startswith()</code>, <code>.endswith()</code>, <code>.lower()</code></li>
+                        <li>Operators: <code>and</code>, <code>or</code>, <code>not</code>, <code>in</code></li>
+                        <li>Header Access: <code>request.headers.get('User-Agent', '')</code></li>
+                    </ul>
+                    <p><b>Examples:</b></p>
+                    <pre style="background: #111; padding: 5px;"># Block admin path
+if 'admin' in request.path:
+    action.drop()</pre>
+                    <pre style="background: #111; padding: 5px;"># Regex in Body
+if re.search(r'union select', request.data.lower()):
+    action.mark('sqli')</pre>
+                    <pre style="background: #111; padding: 5px;"># Check Header
+ua = request.headers.get('User-Agent', '')
+if 'curl' in ua or 'wget' in ua:
+    action.drop()</pre>
+                    <pre style="background: #111; padding: 5px;"># Path Traversal
+if '..' in request.path:
+    action.drop()</pre>
+                    <pre style="background: #111; padding: 5px;"># Method Check
+if request.method == 'POST' and '/api' not in request.path:
+    action.mark('suspicious_post')</pre>
+                    <pre style="background: #111; padding: 5px;"># Whitelist Localhost
+if request.client_ip == '127.0.0.1':
+    action.accept()</pre>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="container" id="view-wiki" style="display: none;">
+    <div class="wiki-content">
+        <div style="text-align: right; margin-bottom: 20px;">
+            <button class="lang-btn active" id="btn-en" onclick="switchLang('en')">English</button>
+            <button class="lang-btn" id="btn-ru" onclick="switchLang('ru')">Русский</button>
+        </div>
+
+        <div class="lang-en">
+            <div class="wiki-section">
+                <h2>Project Description</h2>
+                <p>Firewall Monitor is a high-performance Python-based traffic analyzer and firewall designed for CTF competitions. It features a transparent TCP proxy architecture that intercepts, buffers, and inspects HTTP traffic in real-time. Key capabilities include:</p>
+                <ul>
+                    <li><b>Rule Engine:</b> Python-based rules for flexible traffic filtering (ACCEPT, DROP, MARK).</li>
+                    <li><b>Session Aggregation:</b> Groups fragmented TCP connections into logical User Sessions.</li>
+                    <li><b>Web Dashboard:</b> Real-time monitoring with visual alerts for blocked or suspicious traffic.</li>
+                    <li><b>API Driven:</b> Full control via REST API for automation.</li>
+                </ul>
+            </div>
+
+            <div class="wiki-section">
+                <h2>Writing Rules</h2>
+                <p>Rules are Python scripts executed for each HTTP request. You have access to the <code>request</code> object and the <code>action</code> controller.</p>
+                <pre>if 'malicious' in request.path:
+    action.drop()</pre>
+                <p><b>Priorities:</b></p>
+                <ul>
+                    <li>Service Rules (specific port) > Global Rules.</li>
+                    <li>Action Priority: ACCEPT > DROP > MARK.</li>
+                </ul>
+            </div>
+
+            <div class="wiki-section">
+                <h2>10 Popular Rule Examples</h2>
+                <ol>
+                    <li><b>Block Path:</b> <code>if '/admin' in request.path: action.drop()</code></li>
+                    <li><b>Block IP:</b> <code>if request.client_ip == '192.168.1.5': action.drop()</code></li>
+                    <li><b>Block SQLi (Basic):</b> <code>if 'union select' in request.data.lower(): action.drop()</code></li>
+                    <li><b>Block User-Agent:</b> <code>if 'curl' in request.headers.get('User-Agent', ''): action.drop()</code></li>
+                    <li><b>Allow Specific IP (Whitelist):</b> <code>if request.client_ip == '10.0.0.1': action.accept()</code></li>
+                    <li><b>Mark Suspicious Header:</b> <code>if 'X-Forwarded-For' in request.headers: action.mark('proxy_detected')</code></li>
+                    <li><b>Complex Logic:</b> <code>if request.method == 'POST' and len(request.data) > 1000: action.mark('large_post')</code></li>
+                    <li><b>Regex Match:</b> <code>if re.search(r'\.\./', request.path): action.drop() # Path Traversal</code></li>
+                    <li><b>Block missing Host:</b> <code>if not request.headers.get('Host'): action.drop()</code></li>
+                    <li><b>Time-based (Tagging):</b> <code>if 'sleep' in request.data: action.mark('time_injection_attempt')</code></li>
+                </ol>
+            </div>
+        </div>
+
+        <div class="lang-ru" style="display: none;">
+            <div class="wiki-section">
+                <h2>Описание Проекта</h2>
+                <p>Firewall Monitor — это высокопроизводительный анализатор трафика и фаервол на Python, разработанный для CTF-соревнований. Он использует архитектуру прозрачного TCP-прокси для перехвата, буферизации и инспекции HTTP-трафика в реальном времени. Ключевые возможности:</p>
+                <ul>
+                    <li><b>Движок Правил:</b> Правила на Python для гибкой фильтрации (ACCEPT, DROP, MARK).</li>
+                    <li><b>Агрегация Сессий:</b> Группировка фрагментированных TCP-соединений в логические сессии пользователей.</li>
+                    <li><b>Веб-дашборд:</b> Мониторинг в реальном времени с визуальными оповещениями о блокировках.</li>
+                    <li><b>API:</b> Полное управление через REST API.</li>
+                </ul>
+            </div>
+
+            <div class="wiki-section">
+                <h2>Написание Правил</h2>
+                <p>Правила — это Python-скрипты, выполняемые для каждого HTTP-запроса. У вас есть доступ к объекту <code>request</code> и контроллеру <code>action</code>.</p>
+                <pre>if 'malicious' in request.path:
+    action.drop()</pre>
+                <p><b>Приоритеты:</b></p>
+                <ul>
+                    <li>Правила Сервиса (конкретный порт) > Глобальные правила.</li>
+                    <li>Приоритет действий: ACCEPT > DROP > MARK.</li>
+                </ul>
+            </div>
+
+            <div class="wiki-section">
+                <h2>10 Популярных Примеров</h2>
+                <ol>
+                    <li><b>Блок пути:</b> <code>if '/admin' in request.path: action.drop()</code></li>
+                    <li><b>Блок IP:</b> <code>if request.client_ip == '192.168.1.5': action.drop()</code></li>
+                    <li><b>Блок SQLi (Базовый):</b> <code>if 'union select' in request.data.lower(): action.drop()</code></li>
+                    <li><b>Блок User-Agent:</b> <code>if 'curl' in request.headers.get('User-Agent', ''): action.drop()</code></li>
+                    <li><b>Белый список IP:</b> <code>if request.client_ip == '10.0.0.1': action.accept()</code></li>
+                    <li><b>Маркировка заголовка:</b> <code>if 'X-Forwarded-For' in request.headers: action.mark('proxy_detected')</code></li>
+                    <li><b>Сложная логика:</b> <code>if request.method == 'POST' and len(request.data) > 1000: action.mark('large_post')</code></li>
+                    <li><b>Regex (Регулярки):</b> <code>if re.search(r'\.\./', request.path): action.drop() # Path Traversal</code></li>
+                    <li><b>Нет Host заголовка:</b> <code>if not request.headers.get('Host'): action.drop()</code></li>
+                    <li><b>Атака по времени:</b> <code>if 'sleep' in request.data: action.mark('time_injection_attempt')</code></li>
+                </ol>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Rule Generator Modal -->
+<div id="ruleModal" class="modal-overlay">
+    <div class="modal-box">
+        <h3 class="modal-title">Create Rule Template</h3>
+        <p style="color: #888; font-size: 0.9rem;">Select criteria to include in the rule:</p>
+
+        <div id="modalContent">
+            <!-- Populated dynamically -->
+        </div>
+
+        <div class="modal-footer">
+            <button class="modal-btn btn-cancel" onclick="closeRuleModal()">Cancel</button>
+            <button class="modal-btn btn-confirm" onclick="submitRuleModal()">Create & Edit</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    let currentSessionId = null;
+    let currentRulePath = null;
+    let currentModalData = null; // Store temp data for modal
+    let openFolders = new Set(); // Persist open folders
+
+    function switchView(view) {
+        document.getElementById('view-dashboard').style.display = view === 'dashboard' ? 'flex' : 'none';
+        document.getElementById('view-rules').style.display = view === 'rules' ? 'block' : 'none';
+        document.getElementById('view-wiki').style.display = view === 'wiki' ? 'block' : 'none';
+
+        if (view === 'rules') loadRulesList();
+    }
+
+    function switchLang(lang) {
+        document.querySelector('.lang-en').style.display = lang === 'en' ? 'block' : 'none';
+        document.querySelector('.lang-ru').style.display = lang === 'ru' ? 'block' : 'none';
+
+        document.getElementById('btn-en').classList.toggle('active', lang === 'en');
+        document.getElementById('btn-ru').classList.toggle('active', lang === 'ru');
+    }
+
+    async function fetchSessions() {
+        try {
+            const res = await fetch('/api/sessions');
+            if (res.status === 401) {
+                console.error("Auth required");
+                return;
+            }
+            const sessions = await res.json();
+            renderTable(sessions);
+        } catch (e) {
+            console.error(e);
+        }
+    }
+
+    function renderTable(sessions) {
+        const tbody = document.querySelector('#sessionsTable tbody');
+        tbody.innerHTML = '';
+
+        sessions.forEach(sess => {
+            const tr = document.createElement('tr');
+            if (sess.id === currentSessionId) tr.classList.add('active');
+
+            // Alert Coloring
+            if (sess.alert_level === 2) {
+                tr.classList.add('row-blocked');
+            } else if (sess.alert_level === 1) {
+                tr.classList.add('row-marked');
+            }
+
+            const date = new Date(sess.start_time * 1000).toLocaleTimeString();
+            const streamCount = sess.streams ? sess.streams.length : 0;
+
+            // XSS Safe
+            const tdIp = document.createElement('td'); tdIp.textContent = sess.client_ip;
+            const tdDate = document.createElement('td'); tdDate.textContent = date;
+            const tdCount = document.createElement('td'); tdCount.textContent = streamCount;
+            const tdStatus = document.createElement('td'); tdStatus.textContent = sess.last_activity_time ? 'Active' : 'Closed';
+
+            const tdTags = document.createElement('td');
+            if (sess.tags && sess.tags.length > 0) {
+                sess.tags.forEach(tag => {
+                    const span = document.createElement('span');
+                    span.className = 'tag tag-red';
+                    span.textContent = tag;
+                    tdTags.appendChild(span);
+                });
+            }
+
+            tr.appendChild(tdIp);
+            tr.appendChild(tdDate);
+            tr.appendChild(tdCount);
+            tr.appendChild(tdStatus);
+            tr.appendChild(tdTags);
+
+            tr.onclick = () => showDetails(sess);
+            tbody.appendChild(tr);
+        });
+    }
+
+    function showDetails(sess) {
+        currentSessionId = sess.id;
+        document.getElementById('detailsPanel').style.display = 'block';
+        document.getElementById('detailTitle').textContent = `Session ${sess.id} (${sess.client_ip})`;
+
+        const blockBtn = document.getElementById('blockIpBtn');
+        blockBtn.onclick = () => blockIp(sess.client_ip);
+        blockBtn.innerText = `Block ${sess.client_ip}`;
+
+        const content = document.getElementById('detailContent');
+        content.innerHTML = '';
+
+        if (!sess.streams) return;
+
+        sess.streams.forEach(stream => {
+            const div = document.createElement('div');
+            div.className = 'stream-block';
+
+            const h4 = document.createElement('h4');
+            h4.textContent = `TCP Stream ${stream.id} (${stream.client_port} -> ${stream.target_port})`;
+            div.appendChild(h4);
+
+            if (stream.messages) {
+                stream.messages.forEach(msg => {
+                    const msgDiv = document.createElement('div');
+                    const time = new Date(msg.timestamp * 1000).toLocaleTimeString();
+
+                    if (msg.type === 'REQUEST') {
+                        msgDiv.className = 'msg-req';
+                        const b = document.createElement('b');
+                        b.textContent = `${msg.method} ${msg.url}`;
+                        msgDiv.appendChild(document.createTextNode(`[${time}] `));
+                        msgDiv.appendChild(b);
+
+                        const btnCurl = document.createElement('button');
+                        btnCurl.className = 'btn-action';
+                        btnCurl.textContent = 'Copy cURL';
+                        btnCurl.title = "Copy request as cURL command";
+                        btnCurl.onclick = (e) => {
+                            e.stopPropagation();
+                            const cmd = generateCurl(msg, stream);
+                            copyToClipboard(cmd);
+                        };
+                        msgDiv.appendChild(btnCurl);
+
+                        const btnRule = document.createElement('button');
+                        btnRule.className = 'btn-action';
+                        btnRule.textContent = 'Create Rule';
+                        btnRule.title = "Create a rule template from this request";
+                        btnRule.style.borderColor = '#07a';
+                        btnRule.onclick = (e) => {
+                            e.stopPropagation();
+                            openRuleModal(msg, sess.client_ip);
+                        };
+                        msgDiv.appendChild(btnRule);
+
+                    } else {
+                        msgDiv.className = 'msg-res';
+                        const b = document.createElement('b');
+                        b.textContent = `HTTP ${msg.status_code}`;
+                        msgDiv.appendChild(document.createTextNode(`[${time}] `));
+                        msgDiv.appendChild(b);
+                    }
+
+                    if (msg.tags) {
+                        try {
+                            const tags = JSON.parse(msg.tags);
+                            if (tags.length > 0) {
+                                const span = document.createElement('span');
+                                span.className = 'blocked';
+                                span.textContent = ` [TAGS: ${tags.join(', ')}]`;
+                                msgDiv.appendChild(span);
+                            }
+                        } catch(e) {}
+                    }
+
+                    div.appendChild(msgDiv);
+
+                    const pre = document.createElement('pre');
+                    let text = "";
+
+                    if (msg.headers) {
+                        try {
+                            const headers = JSON.parse(msg.headers);
+                            for (let k in headers) text += `${k}: ${headers[k]}\n`;
+                        } catch (e) {
+                            text += "[Invalid Headers JSON]\n";
+                        }
+                    }
+
+                    text += "\n";
+
+                    if (msg.body) {
+                        text += msg.body;
+                    }
+
+                    pre.textContent = text;
+                    div.appendChild(pre);
+                });
+            }
+
+            content.appendChild(div);
+        });
+    }
+
+    function generateCurl(msg, stream) {
+        try {
+            let headers = {};
+            if (msg.headers) {
+                headers = JSON.parse(msg.headers);
+            }
+
+            let host = headers['Host'] || headers['host'];
+            if (!host) {
+                host = '127.0.0.1:' + (stream.target_port || 80);
+            }
+
+            let url = `http://${host}${msg.url}`;
+            let cmd = `curl -X ${msg.method} "${url}"`;
+
+            for (let k in headers) {
+                const val = headers[k].replace(/"/g, '\\"');
+                cmd += ` -H "${k}: ${val}"`;
+            }
+
+            if (msg.body) {
+                const body = msg.body.replace(/"/g, '\\"');
+                cmd += ` -d "${body}"`;
+            }
+
+            return cmd;
+        } catch (e) {
+            console.error("Error generating cURL:", e);
+            return "Error generating cURL command";
+        }
+    }
+
+    function copyToClipboard(text) {
+        if (navigator.clipboard) {
+            navigator.clipboard.writeText(text).then(() => {
+                const el = document.activeElement;
+                const originalText = el.textContent;
+                el.textContent = "Copied!";
+                setTimeout(() => el.textContent = originalText, 1000);
+            }).catch(err => {
+                console.error("Async clipboard failed", err);
+                prompt("Copy this command:", text);
+            });
+        } else {
+            prompt("Copy this command:", text);
+        }
+    }
+
+    async function blockIp(ip) {
+        if (!confirm(`Are you sure you want to block IP ${ip}?`)) return;
+
+        try {
+            const res = await fetch('/api/rules/block_ip', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ip: ip})
+            });
+
+            if (res.status === 401) {
+                alert("Unauthorized");
+                return;
+            }
+
+            const data = await res.json();
+            if (res.ok) {
+                alert(data.message);
+            } else {
+                alert("Error: " + data.error);
+            }
+        } catch (e) {
+            console.error(e);
+            alert("Failed to block IP");
+        }
+    }
+
+    // --- Modal Logic ---
+    function openRuleModal(msg, clientIp) {
+        currentModalData = {msg: msg, ip: clientIp};
+        const modal = document.getElementById('ruleModal');
+        const content = document.getElementById('modalContent');
+        content.innerHTML = '';
+
+        function createOption(id, label, checked = false) {
+            const div = document.createElement('div');
+            div.className = 'modal-option';
+
+            const input = document.createElement('input');
+            input.type = 'checkbox';
+            input.id = id;
+            input.checked = checked;
+
+            const lbl = document.createElement('label');
+            lbl.htmlFor = id;
+            lbl.textContent = label;
+            lbl.style.wordBreak = 'break-all';
+
+            div.appendChild(input);
+            div.appendChild(lbl);
+            content.appendChild(div);
+        }
+
+        let headers = {};
+        try { headers = JSON.parse(msg.headers || '{}'); } catch(e){}
+
+        createOption('chk_ip', `Client IP: ${clientIp}`, false);
+        createOption('chk_method', `Method: ${msg.method}`, false);
+        createOption('chk_path', `Path: ${msg.url}`, true);
+
+        const host = headers['Host'] || headers['host'];
+        if (host) createOption('chk_host', `Host: ${host}`, false);
+
+        const ua = headers['User-Agent'] || headers['user-agent'];
+        if (ua) createOption('chk_ua', `User-Agent: ${ua}`, false);
+
+        if (msg.body && msg.body.length > 0) {
+            const preview = msg.body.length > 50 ? msg.body.substring(0, 50) + '...' : msg.body;
+            createOption('chk_body', `Body: ${preview}`, false);
+        }
+
+        modal.style.display = 'flex';
+    }
+
+    function closeRuleModal() {
+        document.getElementById('ruleModal').style.display = 'none';
+        currentModalData = null;
+    }
+
+    async function submitRuleModal() {
+        if (!currentModalData) return;
+
+        const conditions = [];
+        const msg = currentModalData.msg;
+        const ip = currentModalData.ip;
+        let headers = {};
+        try { headers = JSON.parse(msg.headers || '{}'); } catch(e){}
+
+        if (document.getElementById('chk_ip').checked) {
+            conditions.push(`request.client_ip == '${ip}'`);
+        }
+        if (document.getElementById('chk_method').checked) {
+            conditions.push(`request.method == '${msg.method}'`);
+        }
+        if (document.getElementById('chk_path').checked) {
+            conditions.push(`request.path == '${msg.url}'`);
+        }
+        if (document.getElementById('chk_host') && document.getElementById('chk_host').checked) {
+            const host = headers['Host'] || headers['host'];
+            conditions.push(`request.headers.get('Host') == '${host}'`);
+        }
+        if (document.getElementById('chk_ua') && document.getElementById('chk_ua').checked) {
+            const ua = headers['User-Agent'] || headers['user-agent'];
+            conditions.push(`'${ua}' in request.headers.get('User-Agent', '')`);
+        }
+        if (document.getElementById('chk_body') && document.getElementById('chk_body').checked) {
+            const safeBody = msg.body.replace(/'/g, "\\'");
+            conditions.push(`request.data == '${safeBody}'`);
+        }
+
+        if (conditions.length === 0) {
+            alert("Select at least one condition");
+            return;
+        }
+
+        const ruleCode =
+`# Auto-generated rule based on request
+# Time: ${new Date().toISOString()}
+
+if ${conditions.join(' and ')}:
+    # TODO: Add action here
+    # action.drop()
+    # action.mark('suspicious')
+    pass
+`;
+
+        const filename = `dynamic/gen_${Date.now()}.rule`;
+
+        try {
+            const res = await fetch('/api/rules/file', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({path: filename, content: ruleCode})
+            });
+
+            if (res.ok) {
+                closeRuleModal();
+                switchView('rules');
+                await loadRulesList();
+                await loadRuleContent(filename);
+            } else {
+                alert("Failed to create rule");
+            }
+        } catch (e) {
+            console.error(e);
+            alert("Error saving rule");
+        }
+    }
+
+    // --- Rules Logic ---
+    async function loadRulesList() {
+        try {
+            const res = await fetch('/api/rules/list');
+            const files = await res.json();
+            const treeRoot = document.getElementById('rulesTree');
+            treeRoot.innerHTML = '';
+
+            // Build tree object
+            const tree = {};
+            files.forEach(file => {
+                const parts = file.path.split('/');
+                let current = tree;
+                for (let i = 0; i < parts.length - 1; i++) {
+                    const part = parts[i];
+                    if (!current[part]) current[part] = { _files: [] };
+                    current = current[part];
+                }
+                current._files.push(file);
+            });
+
+            // Render tree
+            function renderTree(node, container, pathPrefix = "") {
+                const ul = document.createElement('ul');
+
+                // Folders
+                for (let key in node) {
+                    if (key === '_files') continue;
+                    const li = document.createElement('li');
+
+                    const fullPath = pathPrefix + key + '/';
+                    const span = document.createElement('span');
+                    span.className = 'folder';
+                    span.textContent = key + '/';
+
+                    const childContainer = document.createElement('div');
+
+                    // Determine initial state
+                    const isOpen = openFolders.has(fullPath) || (currentRulePath && currentRulePath.startsWith(fullPath));
+
+                    if (isOpen) {
+                        span.classList.add('open');
+                        childContainer.className = '';
+                        openFolders.add(fullPath); // Ensure auto-opened folders stay open
+                    } else {
+                        childContainer.className = 'hidden';
+                    }
+
+                    span.onclick = (e) => {
+                        e.stopPropagation();
+                        if (openFolders.has(fullPath)) {
+                            openFolders.delete(fullPath);
+                            span.classList.remove('open');
+                            childContainer.classList.add('hidden');
+                        } else {
+                            openFolders.add(fullPath);
+                            span.classList.add('open');
+                            childContainer.classList.remove('hidden');
+                        }
+                    };
+
+                    li.appendChild(span);
+                    li.appendChild(childContainer);
+
+                    renderTree(node[key], childContainer, fullPath);
+                    ul.appendChild(li);
+                }
+
+                // Files
+                if (node._files) {
+                    node._files.forEach(file => {
+                        const li = document.createElement('li');
+                        li.className = 'file';
+                        if (file.path === currentRulePath) li.classList.add('active');
+
+                        const spanName = document.createElement('span');
+                        spanName.textContent = file.path.split('/').pop();
+                        spanName.onclick = () => loadRuleContent(file.path);
+
+                        const controls = document.createElement('div');
+                        controls.className = 'file-controls';
+
+                        // Toggle Button
+                        const btnToggle = document.createElement('button');
+                        btnToggle.textContent = file.enabled ? 'ON' : 'OFF';
+                        btnToggle.style.fontSize = '0.7rem';
+                        btnToggle.style.background = file.enabled ? '#050' : '#500';
+                        btnToggle.style.border = 'none';
+                        btnToggle.style.color = '#fff';
+                        btnToggle.style.cursor = 'pointer';
+                        btnToggle.onclick = async (e) => {
+                            e.stopPropagation();
+                            await toggleRule(file.path);
+                        };
+
+                        // Delete Button
+                        const btnDel = document.createElement('button');
+                        btnDel.textContent = 'X';
+                        btnDel.style.fontSize = '0.7rem';
+                        btnDel.style.background = '#333';
+                        btnDel.style.border = 'none';
+                        btnDel.style.color = '#f55';
+                        btnDel.style.cursor = 'pointer';
+                        btnDel.onclick = async (e) => {
+                            e.stopPropagation();
+                            await deleteRule(file.path);
+                        };
+
+                        controls.appendChild(btnToggle);
+                        controls.appendChild(btnDel);
+
+                        li.appendChild(spanName);
+                        li.appendChild(controls);
+                        ul.appendChild(li);
+                    });
+                }
+
+                container.appendChild(ul);
+            }
+
+            // Render root
+            renderTree(tree, treeRoot);
+
+            // Make root folders visible
+            const rootUls = treeRoot.querySelectorAll(':scope > ul > li > div');
+            // Actually my recursion structure adds a wrapper div which is hidden.
+            // But top level items should be visible?
+            // My renderTree wraps everything in a UL.
+            // If I pass treeRoot directly, it appends a UL.
+
+            // Adjust: Remove hidden from top-level folders?
+            // Actually, default collapsed is fine, but maybe expand root?
+            // For now, let's leave it as "click to expand".
+
+        } catch (e) {
+            console.error(e);
+        }
+    }
+
+    async function loadRuleContent(path) {
+        currentRulePath = path;
+        document.getElementById('editorTitle').textContent = path;
+        document.getElementById('btnRename').style.display = 'inline-block';
+        loadRulesList(); // refresh highlight
+
+        try {
+            const res = await fetch(`/api/rules/file?path=${encodeURIComponent(path)}`);
+            const data = await res.json();
+            document.getElementById('ruleContent').value = data.content;
+        } catch (e) {
+            console.error(e);
+        }
+    }
+
+    async function renameCurrentRule() {
+        if (!currentRulePath) return;
+        const newName = prompt("Enter new filename (relative to rules/):", currentRulePath);
+        if (!newName || newName === currentRulePath) return;
+
+        try {
+            const res = await fetch('/api/rules/rename', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({old_path: currentRulePath, new_path: newName})
+            });
+            const data = await res.json();
+            if (res.ok) {
+                // Update current path and reload list
+                currentRulePath = newName;
+                document.getElementById('editorTitle').textContent = newName;
+                loadRulesList();
+            } else {
+                alert("Error: " + data.error);
+            }
+        } catch(e) {
+            alert("Rename failed");
+        }
+    }
+
+    async function saveRule() {
+        if (!currentRulePath) return;
+        const content = document.getElementById('ruleContent').value;
+
+        try {
+            const res = await fetch('/api/rules/file', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({path: currentRulePath, content: content})
+            });
+            const data = await res.json();
+            if (res.ok) alert("Saved");
+            else alert("Error: " + data.error);
+        } catch (e) {
+            alert("Save failed");
+        }
+    }
+
+    async function createNewRule() {
+        const name = document.getElementById('newRuleName').value;
+        if (!name) return;
+        currentRulePath = name;
+        document.getElementById('ruleContent').value = "# New rule\n";
+        await saveRule();
+        loadRulesList();
+        loadRuleContent(name);
+    }
+
+    async function reloadRules() {
+        try {
+            const res = await fetch('/api/rules/reload', { method: 'POST' });
+            const data = await res.json();
+            alert(data.message || data.error);
+        } catch (e) {
+            alert("Reload failed");
+        }
+    }
+
+    async function toggleRule(path) {
+        try {
+            await fetch('/api/rules/toggle', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({path: path})
+            });
+            loadRulesList();
+        } catch (e) {
+            alert("Toggle failed");
+        }
+    }
+
+    async function deleteRule(path) {
+        if (!confirm("Delete rule?")) return;
+        try {
+            await fetch('/api/rules/delete', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({path: path})
+            });
+            loadRulesList();
+        } catch (e) {
+            alert("Delete failed");
+        }
+    }
+
+    function toggleHelp() {
+        const panel = document.getElementById('helpPanel');
+        panel.style.display = panel.style.display === 'none' ? 'block' : 'none';
+    }
+
+    // Auto refresh
+    setInterval(() => {
+        if (document.getElementById('view-dashboard').style.display !== 'none') {
+            fetchSessions();
+        }
+    }, 2000);
+    fetchSessions();
+</script>
+
+</body>
+</html>

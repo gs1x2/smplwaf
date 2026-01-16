@@ -1,0 +1,6 @@
+fastapi
+uvicorn
+aiohttp
+aiosqlite
+httptools
+re
