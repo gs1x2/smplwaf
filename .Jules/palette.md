@@ -1,0 +1,3 @@
+## 2024-05-18 - Improve accessibility of dynamically generated tree buttons
+**Learning:** Screen readers and keyboard navigation users suffer significantly from dynamically injected buttons that contain ambiguous text or just icons (e.g., 'ВКЛ'/'ВЫКЛ' for toggle, or 'X' for delete). Without explicit ARIA labels and titles, these users cannot discern what specific resource the button acts upon, creating a frustrating experience.
+**Action:** Always inject `aria-label` and `title` attributes with contextual information (like the rule's name) when dynamically rendering action buttons via JavaScript.
