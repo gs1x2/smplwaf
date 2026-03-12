@@ -337,6 +337,19 @@ if request.client_ip == '127.0.0.1':
         const tbody = document.querySelector('#sessionsTable tbody');
         tbody.innerHTML = '';
 
+        if (!sessions || sessions.length === 0) {
+            const tr = document.createElement('tr');
+            const td = document.createElement('td');
+            td.colSpan = 5;
+            td.style.textAlign = 'center';
+            td.style.padding = '20px';
+            td.style.color = '#888';
+            td.textContent = 'Нет активных сессий. Ожидание трафика...';
+            tr.appendChild(td);
+            tbody.appendChild(tr);
+            return;
+        }
+
         sessions.forEach(sess => {
             const tr = document.createElement('tr');
             if (sess.id === currentSessionId) tr.classList.add('active');
