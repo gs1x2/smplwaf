@@ -3,4 +3,3 @@ uvicorn
 aiohttp
 aiosqlite
 httptools
-re
