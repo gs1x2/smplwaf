@@ -71,6 +71,11 @@
         .folder::before { content: '📁 '; }
         .folder.open::before { content: '📂 '; }
         .file::before { content: '📄 '; }
+
+        button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed !important;
+        }
     </style>
 </head>
 <body>
@@ -84,7 +89,7 @@
             <a href="#" onclick="switchView('wiki')" style="color: #eee; text-decoration: none;">Вики</a>
         </div>
         <div>
-            <button onclick="alert('Сначала выберите сессию для блокировки')" style="padding: 5px 10px; background: #900; border: none; color: #fff; cursor: pointer;" id="blockIpBtn">Блок IP</button>
+            <button style="padding: 5px 10px; background: #900; border: none; color: #fff; cursor: pointer;" id="blockIpBtn" disabled title="Сначала выберите сессию для блокировки">Блок IP</button>
         </div>
     </div>
 </div>
@@ -131,7 +136,7 @@
                     <button onclick="toggleHelp()" style="background: #444; border: none; color: #fff; padding: 5px 10px; cursor: pointer;">Справка</button>
                     <button onclick="renameCurrentRule()" style="background: #860; border: none; color: #fff; padding: 5px 10px; cursor: pointer; display: none;" id="btnRename">Переим.</button>
                     <button onclick="reloadRules()" style="background: #a50; border: none; color: #fff; padding: 5px 10px; cursor: pointer;">Обновить правила</button>
-                    <button onclick="saveRule()" style="background: #05a; border: none; color: #fff; padding: 5px 10px; cursor: pointer;">Сохранить правило</button>
+                    <button onclick="saveRule()" style="background: #05a; border: none; color: #fff; padding: 5px 10px; cursor: pointer;" id="btnSaveRule" disabled title="Выберите файл для сохранения">Сохранить правило</button>
                 </div>
             </div>
             <div style="flex: 1; display: flex; gap: 10px;">
@@ -384,6 +389,8 @@ if request.client_ip == '127.0.0.1':
         const blockBtn = document.getElementById('blockIpBtn');
         blockBtn.onclick = () => blockIp(sess.client_ip);
         blockBtn.innerText = `Заблокировать ${sess.client_ip}`;
+        blockBtn.disabled = false;
+        blockBtn.title = `Заблокировать IP ${sess.client_ip}`;
 
         const content = document.getElementById('detailContent');
         content.innerHTML = '';
@@ -802,6 +809,11 @@ if ${conditions.join(' and ')}:
         currentRulePath = path;
         document.getElementById('editorTitle').textContent = path;
         document.getElementById('btnRename').style.display = 'inline-block';
+
+        const btnSave = document.getElementById('btnSaveRule');
+        btnSave.disabled = false;
+        btnSave.title = "Сохранить правило";
+
         loadRulesList();
 
         try {
