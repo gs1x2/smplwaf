@@ -84,7 +84,7 @@
             <a href="#" onclick="switchView('wiki')" style="color: #eee; text-decoration: none;">Вики</a>
         </div>
         <div>
-            <button onclick="alert('Сначала выберите сессию для блокировки')" style="padding: 5px 10px; background: #900; border: none; color: #fff; cursor: pointer;" id="blockIpBtn">Блок IP</button>
+            <button disabled title="Сначала выберите сессию для блокировки" style="padding: 5px 10px; background: #900; border: none; color: #fff; cursor: not-allowed; opacity: 0.5;" id="blockIpBtn">Блок IP</button>
         </div>
     </div>
 </div>
@@ -384,6 +384,10 @@ if request.client_ip == '127.0.0.1':
         const blockBtn = document.getElementById('blockIpBtn');
         blockBtn.onclick = () => blockIp(sess.client_ip);
         blockBtn.innerText = `Заблокировать ${sess.client_ip}`;
+        blockBtn.disabled = false;
+        blockBtn.title = `Заблокировать IP ${sess.client_ip}`;
+        blockBtn.style.opacity = '1';
+        blockBtn.style.cursor = 'pointer';
 
         const content = document.getElementById('detailContent');
         content.innerHTML = '';
@@ -757,6 +761,8 @@ if ${conditions.join(' and ')}:
 
                         const btnToggle = document.createElement('button');
                         btnToggle.textContent = file.enabled ? 'ВКЛ' : 'ВЫКЛ';
+                        btnToggle.title = 'Включить/выключить правило';
+                        btnToggle.setAttribute('aria-label', 'Включить/выключить правило');
                         btnToggle.style.fontSize = '0.7rem';
                         btnToggle.style.background = file.enabled ? '#050' : '#500';
                         btnToggle.style.border = 'none';
@@ -769,6 +775,8 @@ if ${conditions.join(' and ')}:
 
                         const btnDel = document.createElement('button');
                         btnDel.textContent = 'X';
+                        btnDel.title = 'Удалить правило';
+                        btnDel.setAttribute('aria-label', 'Удалить правило');
                         btnDel.style.fontSize = '0.7rem';
                         btnDel.style.background = '#333';
                         btnDel.style.border = 'none';
