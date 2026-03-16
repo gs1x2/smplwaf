@@ -48,6 +48,11 @@
         .btn-action { background: #333; border: 1px solid #555; color: #ccc; padding: 2px 6px; font-size: 0.75rem; cursor: pointer; border-radius: 3px; margin-left: 5px; }
         .btn-action:hover { background: #444; color: #fff; }
 
+        a:focus-visible, button:focus-visible, input:focus-visible, textarea:focus-visible {
+            outline: 2px solid #0cf;
+            outline-offset: 2px;
+        }
+
         .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); display: none; justify-content: center; align-items: center; z-index: 1000; }
         .modal-box { background: #1a1a1a; padding: 20px; border: 1px solid #444; width: 400px; border-radius: 4px; }
         .modal-title { margin-top: 0; }
@@ -84,7 +89,7 @@
             <a href="#" onclick="switchView('wiki')" style="color: #eee; text-decoration: none;">Вики</a>
         </div>
         <div>
-            <button onclick="alert('Сначала выберите сессию для блокировки')" style="padding: 5px 10px; background: #900; border: none; color: #fff; cursor: pointer;" id="blockIpBtn">Блок IP</button>
+            <button disabled style="padding: 5px 10px; background: #900; border: none; color: #fff; cursor: not-allowed; opacity: 0.5;" id="blockIpBtn" aria-label="Block IP">Блок IP</button>
         </div>
     </div>
 </div>
@@ -337,6 +342,19 @@ if request.client_ip == '127.0.0.1':
         const tbody = document.querySelector('#sessionsTable tbody');
         tbody.innerHTML = '';
 
+        if (!sessions || sessions.length === 0) {
+            const tr = document.createElement('tr');
+            const td = document.createElement('td');
+            td.colSpan = 5;
+            td.textContent = 'Нет активных сессий';
+            td.style.textAlign = 'center';
+            td.style.padding = '20px';
+            td.style.color = '#888';
+            tr.appendChild(td);
+            tbody.appendChild(tr);
+            return;
+        }
+
         sessions.forEach(sess => {
             const tr = document.createElement('tr');
             if (sess.id === currentSessionId) tr.classList.add('active');
@@ -384,6 +402,9 @@ if request.client_ip == '127.0.0.1':
         const blockBtn = document.getElementById('blockIpBtn');
         blockBtn.onclick = () => blockIp(sess.client_ip);
         blockBtn.innerText = `Заблокировать ${sess.client_ip}`;
+        blockBtn.disabled = false;
+        blockBtn.style.opacity = '1';
+        blockBtn.style.cursor = 'pointer';
 
         const content = document.getElementById('detailContent');
         content.innerHTML = '';
