@@ -26,7 +26,7 @@ async def test_rule_api():
         async with session.get(f"{base_url}/list") as resp:
             data = await resp.json()
             print(f"Rules: {data}")
-            assert test_rule_path in data
+            assert any(r.get("path") == test_rule_path for r in data)
 
         # 3. Read Rule
         print("Reading rule...")
