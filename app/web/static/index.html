@@ -71,6 +71,12 @@
         .folder::before { content: '📁 '; }
         .folder.open::before { content: '📂 '; }
         .file::before { content: '📄 '; }
+
+        /* Accessibility: Improve focus visibility for keyboard navigation */
+        *:focus-visible {
+            outline: 2px solid #0cf;
+            outline-offset: 2px;
+        }
     </style>
 </head>
 <body>
@@ -762,6 +768,8 @@ if ${conditions.join(' and ')}:
                         btnToggle.style.border = 'none';
                         btnToggle.style.color = '#fff';
                         btnToggle.style.cursor = 'pointer';
+                        btnToggle.setAttribute('aria-label', file.enabled ? 'Отключить правило' : 'Включить правило');
+                        btnToggle.title = file.enabled ? 'Отключить правило' : 'Включить правило';
                         btnToggle.onclick = async (e) => {
                             e.stopPropagation();
                             await toggleRule(file.path);
@@ -774,6 +782,8 @@ if ${conditions.join(' and ')}:
                         btnDel.style.border = 'none';
                         btnDel.style.color = '#f55';
                         btnDel.style.cursor = 'pointer';
+                        btnDel.setAttribute('aria-label', 'Удалить правило');
+                        btnDel.title = 'Удалить правило';
                         btnDel.onclick = async (e) => {
                             e.stopPropagation();
                             await deleteRule(file.path);

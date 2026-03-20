@@ -1,0 +1,3 @@
+## 2024-05-27 - Custom Checkbox Focus States
+**Learning:** The application uses custom dark-mode styling which can obscure native browser focus rings. The existing focus state on interactive elements (like the file controls) was indistinguishable from normal states for keyboard users. Adding a global `:focus-visible` outline specifically targeting interactive elements dramatically improves keyboard navigation without negatively affecting mouse users.
+**Action:** When adding new interactive elements, rely on global `:focus-visible` outlines (`outline: 2px solid #0cf; outline-offset: 2px;`) rather than writing custom focus states for each component, ensuring consistent keyboard accessibility across the app.
