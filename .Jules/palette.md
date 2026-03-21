@@ -1,0 +1,3 @@
+## 2026-03-21 - Empty States & ARIA Labels in Dynamic Dashboards
+**Learning:** In real-time monitoring interfaces (like CTF dashboards), dynamically populated tables and lists require explicit empty states to prevent users from wondering if the app is broken or just waiting for data. Additionally, custom icon-only actions created dynamically via JavaScript (like 'X' delete buttons) frequently lack ARIA labels, creating severe accessibility barriers for screen reader users trying to manage critical state.
+**Action:** Always include a helpful empty state message for dynamic lists/tables, and enforce adding `aria-label` via JS (`el.setAttribute('aria-label', '...')`) when creating icon-only buttons dynamically.
