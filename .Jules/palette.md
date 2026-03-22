@@ -1,0 +1,3 @@
+## 2024-05-24 - Missing ARIA attributes in dynamically generated tree components
+**Learning:** Interactive elements that are generated dynamically via JavaScript (e.g., in `app/web/static/index.html`) often lack necessary `aria-label`s and `title` tooltips compared to static elements. In this app, delete buttons (`X`) and toggle elements created through `document.createElement('button')` were completely inaccessible to screen readers and lacked descriptive labels.
+**Action:** Always verify accessibility attributes when inspecting or creating dynamically generated DOM elements. Apply `setAttribute('aria-label', ...)` and `title` values when instantiating new interactive components in JavaScript.
