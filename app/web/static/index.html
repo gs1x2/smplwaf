@@ -120,7 +120,7 @@
             <div id="rulesTree" class="tree-root" style="overflow-y: auto; flex: 1; max-height: calc(100% - 40px);"></div>
 
             <div style="padding: 10px; border-top: 1px solid #333;">
-                <input type="text" id="newRuleName" placeholder="dynamic/new.rule" style="width: 100%; margin-bottom: 5px; background: #333; color: #eee; border: 1px solid #555;">
+                <input type="text" id="newRuleName" aria-label="Имя нового файла правила" placeholder="dynamic/new.rule" style="width: 100%; margin-bottom: 5px; background: #333; color: #eee; border: 1px solid #555;">
                 <button onclick="createNewRule()" style="width: 100%;">Создать</button>
             </div>
         </div>
@@ -135,7 +135,7 @@
                 </div>
             </div>
             <div style="flex: 1; display: flex; gap: 10px;">
-                <textarea id="ruleContent" spellcheck="false"></textarea>
+                <textarea id="ruleContent" aria-label="Содержимое правила" spellcheck="false"></textarea>
                 <div id="helpPanel" style="width: 250px; background: #222; border: 1px solid #444; padding: 10px; overflow-y: auto; display: none; font-size: 0.8rem;">
                     <h4>Справочник синтаксиса</h4>
                     <p><b>Объекты:</b></p>
@@ -757,6 +757,8 @@ if ${conditions.join(' and ')}:
 
                         const btnToggle = document.createElement('button');
                         btnToggle.textContent = file.enabled ? 'ВКЛ' : 'ВЫКЛ';
+                        btnToggle.title = file.enabled ? 'Выключить правило' : 'Включить правило';
+                        btnToggle.setAttribute('aria-label', file.enabled ? 'Выключить правило' : 'Включить правило');
                         btnToggle.style.fontSize = '0.7rem';
                         btnToggle.style.background = file.enabled ? '#050' : '#500';
                         btnToggle.style.border = 'none';
@@ -769,6 +771,8 @@ if ${conditions.join(' and ')}:
 
                         const btnDel = document.createElement('button');
                         btnDel.textContent = 'X';
+                        btnDel.title = 'Удалить правило';
+                        btnDel.setAttribute('aria-label', 'Удалить правило');
                         btnDel.style.fontSize = '0.7rem';
                         btnDel.style.background = '#333';
                         btnDel.style.border = 'none';
