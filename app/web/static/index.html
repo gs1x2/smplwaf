@@ -120,7 +120,7 @@
             <div id="rulesTree" class="tree-root" style="overflow-y: auto; flex: 1; max-height: calc(100% - 40px);"></div>
 
             <div style="padding: 10px; border-top: 1px solid #333;">
-                <input type="text" id="newRuleName" placeholder="dynamic/new.rule" style="width: 100%; margin-bottom: 5px; background: #333; color: #eee; border: 1px solid #555;">
+                <input type="text" id="newRuleName" aria-label="Имя нового правила" placeholder="dynamic/new.rule" style="width: 100%; margin-bottom: 5px; background: #333; color: #eee; border: 1px solid #555;">
                 <button onclick="createNewRule()" style="width: 100%;">Создать</button>
             </div>
         </div>
@@ -414,6 +414,7 @@ if request.client_ip == '127.0.0.1':
                         btnCurl.className = 'btn-action';
                         btnCurl.textContent = 'Коп. CURL';
                         btnCurl.title = "Копировать как CURL";
+                        btnCurl.setAttribute('aria-label', 'Копировать как CURL');
                         btnCurl.onclick = (e) => {
                             e.stopPropagation();
                             const cmd = generateCurl(msg, stream);
@@ -425,6 +426,7 @@ if request.client_ip == '127.0.0.1':
                         btnRule.className = 'btn-action';
                         btnRule.textContent = 'Создать правило';
                         btnRule.title = "Создать шаблон из запроса";
+                        btnRule.setAttribute('aria-label', 'Создать шаблон из запроса');
                         btnRule.style.borderColor = '#07a';
                         btnRule.onclick = (e) => {
                             e.stopPropagation();
@@ -757,6 +759,8 @@ if ${conditions.join(' and ')}:
 
                         const btnToggle = document.createElement('button');
                         btnToggle.textContent = file.enabled ? 'ВКЛ' : 'ВЫКЛ';
+                        btnToggle.title = file.enabled ? 'Выключить правило' : 'Включить правило';
+                        btnToggle.setAttribute('aria-label', file.enabled ? 'Выключить правило' : 'Включить правило');
                         btnToggle.style.fontSize = '0.7rem';
                         btnToggle.style.background = file.enabled ? '#050' : '#500';
                         btnToggle.style.border = 'none';
@@ -769,6 +773,8 @@ if ${conditions.join(' and ')}:
 
                         const btnDel = document.createElement('button');
                         btnDel.textContent = 'X';
+                        btnDel.title = 'Удалить правило';
+                        btnDel.setAttribute('aria-label', 'Удалить правило');
                         btnDel.style.fontSize = '0.7rem';
                         btnDel.style.background = '#333';
                         btnDel.style.border = 'none';
