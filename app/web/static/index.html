@@ -6,6 +6,7 @@
     <title>SmplWAF</title>
     <style>
         body { font-family: monospace; background: #111; color: #eee; margin: 0; }
+        :focus-visible { outline: 2px solid #0cf; outline-offset: 2px; }
         .navbar { background: #222; padding: 10px 20px; border-bottom: 1px solid #444; }
         .navbar h1 { margin: 0; font-size: 1.2rem; }
 
@@ -65,8 +66,8 @@
         .file { cursor: pointer; color: #eee; display: flex; justify-content: space-between; align-items: center; padding-right: 5px; }
         .file.active { color: #0cf; background: #222; }
         .file:hover { background: #222; }
-        .file-controls { display: none; gap: 5px; }
-        .file:hover .file-controls { display: flex; }
+        .file-controls { opacity: 0; pointer-events: none; display: flex; gap: 5px; }
+        .file:hover .file-controls, .file:focus-within .file-controls { opacity: 1; pointer-events: auto; }
         .hidden { display: none; }
         .folder::before { content: '📁 '; }
         .folder.open::before { content: '📂 '; }
@@ -709,6 +710,13 @@ if ${conditions.join(' and ')}:
                     const span = document.createElement('span');
                     span.className = 'folder';
                     span.textContent = key + '/';
+                    span.tabIndex = 0;
+                    span.onkeydown = (e) => {
+                        if (e.key === 'Enter' || e.key === ' ') {
+                            e.preventDefault();
+                            span.click();
+                        }
+                    };
 
                     const childContainer = document.createElement('div');
 
@@ -750,6 +758,13 @@ if ${conditions.join(' and ')}:
 
                         const spanName = document.createElement('span');
                         spanName.textContent = file.path.split('/').pop();
+                        spanName.tabIndex = 0;
+                        spanName.onkeydown = (e) => {
+                            if (e.key === 'Enter' || e.key === ' ') {
+                                e.preventDefault();
+                                spanName.click();
+                            }
+                        };
                         spanName.onclick = () => loadRuleContent(file.path);
 
                         const controls = document.createElement('div');
@@ -769,6 +784,7 @@ if ${conditions.join(' and ')}:
 
                         const btnDel = document.createElement('button');
                         btnDel.textContent = 'X';
+                        btnDel.setAttribute('aria-label', 'Удалить правило');
                         btnDel.style.fontSize = '0.7rem';
                         btnDel.style.background = '#333';
                         btnDel.style.border = 'none';
