@@ -689,6 +689,9 @@ if ${conditions.join(' and ')}:
             const tree = {};
             files.forEach(file => {
                 const parts = file.path.split('/');
+                if (parts.length === 1) {
+                    if (!tree._files) tree._files = [];
+                }
                 let current = tree;
                 for (let i = 0; i < parts.length - 1; i++) {
                     const part = parts[i];
@@ -757,6 +760,8 @@ if ${conditions.join(' and ')}:
 
                         const btnToggle = document.createElement('button');
                         btnToggle.textContent = file.enabled ? 'ВКЛ' : 'ВЫКЛ';
+                        btnToggle.title = file.enabled ? 'Выключить правило' : 'Включить правило';
+                        btnToggle.setAttribute('aria-label', file.enabled ? 'Выключить правило' : 'Включить правило');
                         btnToggle.style.fontSize = '0.7rem';
                         btnToggle.style.background = file.enabled ? '#050' : '#500';
                         btnToggle.style.border = 'none';
@@ -769,6 +774,8 @@ if ${conditions.join(' and ')}:
 
                         const btnDel = document.createElement('button');
                         btnDel.textContent = 'X';
+                        btnDel.title = 'Удалить правило';
+                        btnDel.setAttribute('aria-label', 'Удалить правило');
                         btnDel.style.fontSize = '0.7rem';
                         btnDel.style.background = '#333';
                         btnDel.style.border = 'none';
