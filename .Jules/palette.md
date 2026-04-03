@@ -1,0 +1,3 @@
+## 2024-05-18 - ARIA labels for dynamically created icon-only buttons
+**Learning:** In vanilla JavaScript, dynamically creating DOM elements with `document.createElement()` and only assigning text content to them (like "X" for a close/delete button) creates elements that are completely inaccessible to screen readers and difficult to understand visually without context.
+**Action:** When dynamically generating icon-only buttons in vanilla JS, you must always explicitly assign an `aria-label` attribute using `.setAttribute('aria-label', 'Description')` and it's highly recommended to add a `.title` attribute for visual hover tooltips.
