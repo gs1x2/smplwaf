@@ -1,0 +1,3 @@
+## 2024-05-24 - Accessibility of Dynamically Created Vanilla JS Elements
+**Learning:** When generating interactive DOM elements (like icon-only buttons) dynamically via vanilla JavaScript (e.g., `document.createElement`), static HTML linters or accessibility checkers cannot parse them. Therefore, accessibility attributes such as `aria-label` must be explicitly assigned using `.setAttribute()` to ensure these elements remain accessible to screen readers.
+**Action:** Always verify dynamically generated UI components and proactively add necessary `aria-label`, `title`, or roles via JavaScript when dealing with vanilla JS without a framework or templating engine.
