@@ -1,0 +1,3 @@
+## 2024-05-18 - ARIA Labels on Dynamically Created Elements
+**Learning:** Screen readers bypass static HTML parsing for elements generated dynamically via JavaScript (e.g., using `document.createElement()`). Therefore, assigning text or styles isn't enough; accessibility attributes must be explicitly set programmatically using `setAttribute('aria-label', ...)` to ensure interactive controls (like icon-only buttons or toggles) are accessible.
+**Action:** Always use `setAttribute()` to add `aria-label` or `title` to interactive elements created dynamically in vanilla JS, especially when they lack descriptive text content.
