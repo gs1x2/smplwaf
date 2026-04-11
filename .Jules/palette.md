@@ -1,0 +1,3 @@
+## 2026-04-10 - Add aria-label and title to dynamically created delete button
+**Learning:** When dynamically creating UI elements like icon-only buttons via JavaScript (`document.createElement`), ARIA attributes such as `aria-label` must be explicitly set using `setAttribute()`. Setting them just as normal properties won't work correctly for screen readers as they bypass static HTML parsing. Tooltips via `title` are also essential for visual accessibility of icon-only buttons.
+**Action:** Always verify dynamically generated DOM nodes that function as icon-only buttons have an explicit `setAttribute('aria-label', ...)` alongside `title` to ensure both screen reader and visual accessibility.
