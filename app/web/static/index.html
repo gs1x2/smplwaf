@@ -762,6 +762,8 @@ if ${conditions.join(' and ')}:
                         btnToggle.style.border = 'none';
                         btnToggle.style.color = '#fff';
                         btnToggle.style.cursor = 'pointer';
+                        btnToggle.title = 'Включить/Выключить правило';
+                        btnToggle.setAttribute('aria-label', 'Включить/Выключить правило');
                         btnToggle.onclick = async (e) => {
                             e.stopPropagation();
                             await toggleRule(file.path);
@@ -774,6 +776,8 @@ if ${conditions.join(' and ')}:
                         btnDel.style.border = 'none';
                         btnDel.style.color = '#f55';
                         btnDel.style.cursor = 'pointer';
+                        btnDel.title = 'Удалить правило';
+                        btnDel.setAttribute('aria-label', 'Удалить правило');
                         btnDel.onclick = async (e) => {
                             e.stopPropagation();
                             await deleteRule(file.path);
