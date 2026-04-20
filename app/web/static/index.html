@@ -757,6 +757,7 @@ if ${conditions.join(' and ')}:
 
                         const btnToggle = document.createElement('button');
                         btnToggle.textContent = file.enabled ? 'ВКЛ' : 'ВЫКЛ';
+                        btnToggle.setAttribute('aria-label', file.enabled ? 'Выключить правило' : 'Включить правило');
                         btnToggle.style.fontSize = '0.7rem';
                         btnToggle.style.background = file.enabled ? '#050' : '#500';
                         btnToggle.style.border = 'none';
@@ -769,6 +770,8 @@ if ${conditions.join(' and ')}:
 
                         const btnDel = document.createElement('button');
                         btnDel.textContent = 'X';
+                        btnDel.setAttribute('aria-label', 'Удалить');
+                        btnDel.title = 'Удалить';
                         btnDel.style.fontSize = '0.7rem';
                         btnDel.style.background = '#333';
                         btnDel.style.border = 'none';
