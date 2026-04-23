@@ -1,0 +1,3 @@
+## 2024-03-24 - ARIA attributes on dynamic DOM elements
+**Learning:** When dynamically creating DOM elements in vanilla JavaScript (e.g., via `document.createElement`), ARIA attributes such as `aria-label` must be explicitly assigned using `setAttribute()`. They cannot be reliably set as direct properties on the element object like `title` or `textContent`. This ensures icon-only buttons remain accessible to screen readers, as they bypass static HTML parsing.
+**Action:** Always use `element.setAttribute('aria-label', 'Value')` when adding accessibility labels to vanilla JS components constructed in memory before appending them to the DOM.
