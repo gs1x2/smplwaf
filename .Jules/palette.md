@@ -1,0 +1,3 @@
+## 2026-04-25 - Keyboard Accessibility for Hover Controls
+**Learning:** In vanilla JavaScript/HTML projects, hiding secondary controls (like `.file-controls`) using `display: none` and revealing them with `.file:hover` prevents keyboard-only users from ever focusing or interacting with those controls, as they are removed from the accessibility tree.
+**Action:** Instead of `display: none`, use `opacity: 0` and `pointer-events: none` by default, then set `opacity: 1` and `pointer-events: auto` on both `:hover` and `:focus-within` on the parent container. This ensures the controls remain in the DOM, are focusable, and become visible when tabbed into.
