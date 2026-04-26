@@ -65,8 +65,9 @@
         .file { cursor: pointer; color: #eee; display: flex; justify-content: space-between; align-items: center; padding-right: 5px; }
         .file.active { color: #0cf; background: #222; }
         .file:hover { background: #222; }
-        .file-controls { display: none; gap: 5px; }
-        .file:hover .file-controls { display: flex; }
+        .file-controls { display: flex; opacity: 0; gap: 5px; transition: opacity 0.2s; pointer-events: none; }
+        .file:hover .file-controls, .file:focus-within .file-controls { opacity: 1; pointer-events: auto; }
+        .file-controls button:focus-visible { outline: 2px solid #0cf; outline-offset: 2px; }
         .hidden { display: none; }
         .folder::before { content: '📁 '; }
         .folder.open::before { content: '📂 '; }
@@ -686,7 +687,7 @@ if ${conditions.join(' and ')}:
             const treeRoot = document.getElementById('rulesTree');
             treeRoot.innerHTML = '';
 
-            const tree = {};
+            const tree = { _files: [] };
             files.forEach(file => {
                 const parts = file.path.split('/');
                 let current = tree;
@@ -695,6 +696,7 @@ if ${conditions.join(' and ')}:
                     if (!current[part]) current[part] = { _files: [] };
                     current = current[part];
                 }
+                if (!current._files) current._files = [];
                 current._files.push(file);
             });
 
@@ -757,6 +759,8 @@ if ${conditions.join(' and ')}:
 
                         const btnToggle = document.createElement('button');
                         btnToggle.textContent = file.enabled ? 'ВКЛ' : 'ВЫКЛ';
+                        btnToggle.setAttribute('aria-label', file.enabled ? 'Выключить правило' : 'Включить правило');
+                        btnToggle.title = file.enabled ? 'Выключить правило' : 'Включить правило';
                         btnToggle.style.fontSize = '0.7rem';
                         btnToggle.style.background = file.enabled ? '#050' : '#500';
                         btnToggle.style.border = 'none';
@@ -769,6 +773,8 @@ if ${conditions.join(' and ')}:
 
                         const btnDel = document.createElement('button');
                         btnDel.textContent = 'X';
+                        btnDel.setAttribute('aria-label', 'Удалить правило');
+                        btnDel.title = 'Удалить правило';
                         btnDel.style.fontSize = '0.7rem';
                         btnDel.style.background = '#333';
                         btnDel.style.border = 'none';
