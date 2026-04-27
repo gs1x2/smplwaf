@@ -1,0 +1,3 @@
+## 2024-05-24 - Accessibility and Hidden Controls
+**Learning:** `display: none` removes elements from the accessibility tree and keyboard focus order, making interactive elements like buttons inaccessible via keyboard even if they are revealed on parent hover. Similarly, dynamically created DOM elements bypass static HTML parsing, requiring ARIA attributes to be explicitly assigned using `.setAttribute()`.
+**Action:** Use `opacity: 0` alongside `opacity: 1` triggered by `:focus-within` to hide controls visually while retaining keyboard accessibility. Always apply ARIA labels using `.setAttribute('aria-label', ...)` for dynamically generated icon-only buttons.
