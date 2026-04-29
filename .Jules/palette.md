@@ -1,0 +1,3 @@
+## 2024-05-19 - Accessible dynamically generated hidden file controls
+**Learning:** In vanilla JavaScript without a framework, elements are often hidden using `display: none` on their parents until a hover event, which breaks keyboard navigation. Also, icon-only buttons created dynamically using `document.createElement` bypass HTML static analysis.
+**Action:** Use `opacity: 0; pointer-events: none;` and `:focus-within { opacity: 1; pointer-events: auto; }` for hidden UI elements to ensure they receive tab focus. Always dynamically assign ARIA attributes via `setAttribute()` when creating icon-only buttons in vanilla JS.
