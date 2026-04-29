@@ -65,8 +65,8 @@
         .file { cursor: pointer; color: #eee; display: flex; justify-content: space-between; align-items: center; padding-right: 5px; }
         .file.active { color: #0cf; background: #222; }
         .file:hover { background: #222; }
-        .file-controls { display: none; gap: 5px; }
-        .file:hover .file-controls { display: flex; }
+        .file-controls { display: flex; gap: 5px; opacity: 0; pointer-events: none; }
+        .file:hover .file-controls, .file-controls:focus-within { opacity: 1; pointer-events: auto; }
         .hidden { display: none; }
         .folder::before { content: '📁 '; }
         .folder.open::before { content: '📂 '; }
@@ -768,6 +768,7 @@ if ${conditions.join(' and ')}:
                         };
 
                         const btnDel = document.createElement('button');
+                        btnDel.setAttribute('aria-label', 'Удалить правило');
                         btnDel.textContent = 'X';
                         btnDel.style.fontSize = '0.7rem';
                         btnDel.style.background = '#333';
