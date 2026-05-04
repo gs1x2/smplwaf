@@ -65,8 +65,8 @@
         .file { cursor: pointer; color: #eee; display: flex; justify-content: space-between; align-items: center; padding-right: 5px; }
         .file.active { color: #0cf; background: #222; }
         .file:hover { background: #222; }
-        .file-controls { display: none; gap: 5px; }
-        .file:hover .file-controls { display: flex; }
+        .file-controls { display: flex; opacity: 0; pointer-events: none; gap: 5px; }
+        .file:hover .file-controls, .file:focus-within .file-controls { opacity: 1; pointer-events: auto; }
         .hidden { display: none; }
         .folder::before { content: '📁 '; }
         .folder.open::before { content: '📂 '; }
@@ -756,6 +756,7 @@ if ${conditions.join(' and ')}:
                         controls.className = 'file-controls';
 
                         const btnToggle = document.createElement('button');
+                        btnToggle.setAttribute('aria-label', file.enabled ? 'Отключить правило' : 'Включить правило');
                         btnToggle.textContent = file.enabled ? 'ВКЛ' : 'ВЫКЛ';
                         btnToggle.style.fontSize = '0.7rem';
                         btnToggle.style.background = file.enabled ? '#050' : '#500';
@@ -768,6 +769,7 @@ if ${conditions.join(' and ')}:
                         };
 
                         const btnDel = document.createElement('button');
+                        btnDel.setAttribute('aria-label', 'Удалить правило');
                         btnDel.textContent = 'X';
                         btnDel.style.fontSize = '0.7rem';
                         btnDel.style.background = '#333';
