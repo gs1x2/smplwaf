@@ -1,0 +1,3 @@
+## 2024-05-24 - Accessibility of Dynamically Created Controls
+**Learning:** Using `display: none` for dynamically hidden UI controls (like `.file-controls`) completely removes them from the DOM flow, preventing keyboard navigation and screen readers from focusing on them. Dynamically created vanilla JS DOM elements (e.g. icon-only buttons via `document.createElement`) bypass static HTML parsing and require explicit `setAttribute('aria-label', ...)` assignment to remain accessible.
+**Action:** Always use `opacity: 0` and `pointer-events: none` combined with `:focus-within` to hide/show interactive controls so they remain keyboard focusable. Use `.setAttribute('aria-label')` for all dynamically injected icon buttons.
