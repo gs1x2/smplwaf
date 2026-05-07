@@ -1,0 +1,5 @@
+## 2026-05-07 - Accessibility of Dynamically Injected UI Elements and Hidden Controls
+
+**Learning:** When dynamically generating DOM elements in vanilla JavaScript (e.g. `document.createElement('button')`), the elements bypass static HTML parsing. ARIA attributes must be explicitly assigned using `element.setAttribute('aria-label', '...')` to ensure screen readers can announce icon-only buttons. Additionally, file controls hidden via `display: none` cannot be reached via keyboard navigation (tabbing). They must be placed in the DOM using `opacity: 0` and revealed using the `:focus-within` CSS pseudo-class to ensure both mouse hover and keyboard focus states are handled accessibly.
+
+**Action:** Whenever creating dynamic list items or tables with actionable icon controls, use `opacity` with `:focus-within` to maintain keyboard focusability, and aggressively add `setAttribute('aria-label', '...')` for any newly created buttons lacking textual descriptions.
