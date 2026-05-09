@@ -1,0 +1,3 @@
+## 2024-05-10 - Keyboard Accessibility for Hidden Controls and Dynamic DOM Elements
+**Learning:** Using `display: none` for hover-only UI controls (like `.file-controls`) completely removes them from the accessibility tree, making them impossible to reach via keyboard navigation. Additionally, when dynamically generating DOM elements with vanilla JS (e.g., `document.createElement`), ARIA attributes like `aria-label` MUST be explicitly set using `setAttribute()`, otherwise screen readers may miss them since they bypass static HTML parsing.
+**Action:** Use `opacity: 0` combined with `:focus-within { opacity: 1 }` for hidden interactive controls, and always use `.setAttribute('aria-label', ...)` when creating icon-only buttons via JS.
