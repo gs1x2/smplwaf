@@ -1,0 +1,3 @@
+## 2024-05-11 - Accessibility of Hidden Controls
+**Learning:** Hidden controls that rely solely on `display: none` and are revealed via `.parent:hover` are completely inaccessible to keyboard-only and screen reader users. The application had action buttons (`.file-controls`) in the rule list that suffered from this pattern.
+**Action:** Always prefer `opacity: 0` combined with `:focus-within` and `pointer-events: none` over `display: none` for revealable secondary actions. This allows the controls to remain in the DOM structure for tab navigation while staying visually hidden until focused or hovered.
