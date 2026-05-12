@@ -1,0 +1,3 @@
+## 2024-05-13 - Keyboard Accessibility for Hidden Controls
+**Learning:** `display: none` completely removes elements from the accessibility tree and prevents them from receiving focus. If controls (like file action buttons) are meant to appear on hover, using `display: none` means keyboard-only and screen reader users can never access them.
+**Action:** Use `opacity: 0` (or visual hidden classes) combined with `pointer-events: none` for the hidden state, and `opacity: 1` with `pointer-events: auto` for `:hover` and `:focus-within` states. This keeps them in the DOM and tab order while hiding them visually until needed.
